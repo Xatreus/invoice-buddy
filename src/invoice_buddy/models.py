@@ -1,14 +1,14 @@
 from datetime import date
 from decimal import Decimal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class LineItem(BaseModel):
     description: str
-    quantity: Decimal
-    unit_price: Decimal
-    amount: Decimal
+    quantity: Decimal = Field(gt=0)
+    unit_price: Decimal = Field(ge=0)
+    amount: Decimal = Field(ge=0)
 
 
 class Invoice(BaseModel):
@@ -17,25 +17,7 @@ class Invoice(BaseModel):
     invoice_date: date
     due_date: date | None = None
     currency: str
-    subtotal: Decimal
-    tax: Decimal
-    total: Decimal
+    subtotal: Decimal = Field(ge=0)
+    tax: Decimal = Field(ge=0)
+    total: Decimal = Field(ge=0)
     line_items: list[LineItem]
-
-
-from invoice_buddy.models import Invoice
-
-invoice = Invoice(
-    invoice_number="INV-001",
-    vendor="Acme Supplies",
-    invoice_date="2026-09-17",
-    currency="INR",
-    subtotal="10000.00",
-    tax="1800.00",
-    total="11800.00",
-    line_items=[],
-)
-
-
-print(type(invoice.invoice_date))
-print(type(invoice.total))
