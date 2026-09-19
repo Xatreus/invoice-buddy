@@ -5,6 +5,7 @@ from invoice_buddy.services import (
     calculate_subtotal,
     calculate_tax,
     calculate_total,
+    round_money,
 )
 
 
@@ -77,3 +78,28 @@ def test_calculate_total():
     result = calculate_total(subtotal, tax)
 
     assert result == Decimal("1180.00")
+
+
+def test_round_money():
+    value = Decimal("179.9982")
+
+    result = round_money(value)
+
+    assert result == Decimal("180.00")
+
+
+def test_round_money_rounds_half_up():
+    value = Decimal("10.125")
+
+    result = round_money(value)
+
+    assert result == Decimal("10.13")
+
+
+def test_calculate_tax_rounds_to_two_decimal_places():
+    subtotal = Decimal("999.99")
+    tax_rate = Decimal(18)
+
+    result = calculate_tax(subtotal, tax_rate)
+
+    assert result == Decimal("180.00")

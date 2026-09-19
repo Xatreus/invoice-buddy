@@ -95,3 +95,17 @@ def test_invoice_rejects_negative_total():
             total=Decimal("-1100.00"),
             line_items=[],
         )
+
+
+def test_invoice_rejects_incorrect_total():
+    with pytest.raises(ValidationError):
+        Invoice(
+            invoice_number="INV-005",
+            vendor="Bad Vendor",
+            invoice_date=date(2026, 9, 17),
+            currency="INR",
+            subtotal=Decimal("10000.00"),
+            tax=Decimal("1800.00"),
+            total=Decimal("50000.00"),
+            line_items=[],
+        )
