@@ -1,7 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
-
 DATABASE_URL = "sqlite:///./invoice_buddy.db"
 
 
@@ -23,6 +22,6 @@ SessionLocal = sessionmaker(
 
 
 def init_db():
-    from invoice_buddy import db_models
+    from invoice_buddy import db_models  # noqa: F401
 
     Base.metadata.create_all(bind=engine)

@@ -51,7 +51,7 @@ def test_create_invoice():
         invoice.line_items.append(
             LineItemDB(
                 description="Test Item",
-                quantity=Decimal("2"),
+                quantity=Decimal(2),
                 unit_price=Decimal("500.00"),
                 amount=Decimal("1000.00"),
             )
@@ -86,7 +86,7 @@ def test_get_invoice():
         invoice.line_items.append(
             LineItemDB(
                 description="Another Item",
-                quantity=Decimal("1"),
+                quantity=Decimal(1),
                 unit_price=Decimal("500.00"),
                 amount=Decimal("500.00"),
             )

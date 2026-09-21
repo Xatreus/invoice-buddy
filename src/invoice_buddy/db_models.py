@@ -49,7 +49,7 @@ class InvoiceDB(Base):
         Numeric(12, 2),
     )
 
-    line_items: Mapped[list["LineItemDB"]] = relationship(
+    line_items: Mapped[list[LineItemDB]] = relationship(
         back_populates="invoice",
         cascade="all, delete-orphan",
     )

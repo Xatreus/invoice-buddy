@@ -39,9 +39,9 @@ def test_line_item_rejects_negative_unit_price():
     with pytest.raises(ValidationError):
         LineItem(
             description="Laptop",
-            quantity=Decimal("1"),
-            unit_price=Decimal("-50000"),
-            amount=Decimal("0"),
+            quantity=Decimal(1),
+            unit_price=Decimal(-50000),
+            amount=Decimal(0),
         )
 
 
@@ -49,9 +49,9 @@ def test_line_item_rejects_negative_amount():
     with pytest.raises(ValidationError):
         LineItem(
             description="Laptop",
-            quantity=Decimal("1"),
-            unit_price=Decimal("50000"),
-            amount=Decimal("-50000"),
+            quantity=Decimal(1),
+            unit_price=Decimal(50000),
+            amount=Decimal(-50000),
         )
 
 

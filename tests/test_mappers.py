@@ -1,11 +1,10 @@
 from datetime import date
 from decimal import Decimal
 
+from invoice_buddy.database import SessionLocal, init_db
 from invoice_buddy.db_models import InvoiceDB
 from invoice_buddy.mappers import invoice_from_db, invoice_to_db
 from invoice_buddy.models import Invoice, LineItem
-
-from invoice_buddy.database import SessionLocal, init_db
 from invoice_buddy.repositories import create_invoice
 
 
@@ -22,7 +21,7 @@ def test_invoice_to_db():
         line_items=[
             LineItem(
                 description="Laptop",
-                quantity=Decimal("2"),
+                quantity=Decimal(2),
                 unit_price=Decimal("500.00"),
                 amount=Decimal("1000.00"),
             )
@@ -72,13 +71,13 @@ def test_invoice_database_round_trip():
         line_items=[
             LineItem(
                 description="Keyboard",
-                quantity=Decimal("2"),
+                quantity=Decimal(2),
                 unit_price=Decimal("500.00"),
                 amount=Decimal("1000.00"),
             ),
             LineItem(
                 description="Mouse",
-                quantity=Decimal("1"),
+                quantity=Decimal(1),
                 unit_price=Decimal("500.00"),
                 amount=Decimal("500.00"),
             ),
