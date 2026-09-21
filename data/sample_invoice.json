@@ -1,0 +1,24 @@
+{
+    "invoice_number": "INV-1001",
+    "vendor": "ACME Supplies",
+    "invoice_date": "2026-09-21",
+    "due_date": "2026-10-21",
+    "currency": "INR",
+    "subtotal": "10000.00",
+    "tax": "1800.00",
+    "total": "11800.00",
+    "line_items": [
+        {
+            "description": "Laptop",
+            "quantity": "2",
+            "unit_price": "4000.00",
+            "amount": "8000.00"
+        },
+        {
+            "description": "Keyboard",
+            "quantity": "2",
+            "unit_price": "1000.00",
+            "amount": "2000.00"
+        }
+    ]
+}

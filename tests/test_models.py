@@ -109,3 +109,24 @@ def test_invoice_rejects_incorrect_total():
             total=Decimal("50000.00"),
             line_items=[],
         )
+
+
+def test_line_item_rejects_incorrect_amount():
+    with pytest.raises(ValidationError):
+        LineItem(
+            description="Laptop",
+            quantity=Decimal(2),
+            unit_price=Decimal("500.00"),
+            amount=Decimal("900.00"),
+        )
+
+
+def test_line_item_accepts_correct_amount():
+    item = LineItem(
+        description="Laptop",
+        quantity=Decimal(2),
+        unit_price=Decimal("500.00"),
+        amount=Decimal("1000.00"),
+    )
+
+    assert item.amount == Decimal("1000.00")

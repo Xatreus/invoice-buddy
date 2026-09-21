@@ -10,6 +10,17 @@ class LineItem(BaseModel):
     unit_price: Decimal = Field(ge=0)
     amount: Decimal = Field(ge=0)
 
+    @model_validator(mode="after")
+    def validate_amount(self):
+        expected_amount = self.quantity * self.unit_price
+
+        if expected_amount != self.amount:
+            raise ValueError(
+                "line item amount must equal quantity multiplied by unit price"
+            )
+
+        return self
+
 
 class Invoice(BaseModel):
     invoice_number: str
