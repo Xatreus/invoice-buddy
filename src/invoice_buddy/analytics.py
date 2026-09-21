@@ -23,13 +23,12 @@ def total_spend(session: Session) -> Decimal:
 
 def average_invoice_value(session: Session) -> Decimal:
     statement = select(func.avg(InvoiceDB.total))
-
     result = session.scalar(statement)
 
     if result is None:
         return Decimal("0.00")
 
-    return Decimal(str(result))
+    return Decimal(str(result)).quantize(Decimal("0.01"))
 
 
 def largest_invoice(session: Session) -> InvoiceDB | None:
