@@ -21,7 +21,7 @@ SessionLocal = sessionmaker(
 )
 
 
-def init_db():
+def init_db(db_engine=engine):
     from invoice_buddy import db_models  # noqa: F401
 
-    Base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=db_engine)

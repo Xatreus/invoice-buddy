@@ -1,9 +1,10 @@
 from datetime import date
 from decimal import Decimal
 
-from sqlalchemy import inspect, text
+from sqlalchemy import create_engine, inspect, text
+from sqlalchemy.orm import sessionmaker
 
-from invoice_buddy.database import SessionLocal, engine, init_db
+from invoice_buddy.database import init_db
 from invoice_buddy.db_models import InvoiceDB, LineItemDB
 from invoice_buddy.repositories import (
     create_invoice,
@@ -11,30 +12,57 @@ from invoice_buddy.repositories import (
     get_invoice,
     get_invoice_by_number,
     list_invoices,
+    list_invoices_by_currency,
+    list_invoices_by_vendor,
+    update_invoice,
 )
 
 
+def create_test_database():
+    test_engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+    )
+
+    test_session_factory = sessionmaker(
+        bind=test_engine,
+        autoflush=False,
+        autocommit=False,
+    )
+
+    init_db(test_engine)
+
+    return test_engine, test_session_factory
+
+
 def test_database_connection():
-    with engine.connect() as connection:
+    test_engine = create_engine("sqlite:///:memory:")
+
+    with test_engine.connect() as connection:
         result = connection.execute(text("SELECT 1"))
 
     assert result.scalar() == 1
 
+    test_engine.dispose()
+
 
 def test_init_db_creates_tables():
-    init_db()
+    test_engine = create_engine("sqlite:///:memory:")
 
-    inspector = inspect(engine)
+    init_db(test_engine)
+
+    inspector = inspect(test_engine)
     tables = inspector.get_table_names()
 
     assert "invoices" in tables
     assert "line_items" in tables
 
+    test_engine.dispose()
+
 
 def test_create_invoice():
-    init_db()
-
-    session = SessionLocal()
+    test_engine, session_factory = create_test_database()
+    session = session_factory()
 
     try:
         invoice = InvoiceDB(
@@ -65,12 +93,12 @@ def test_create_invoice():
 
     finally:
         session.close()
+        test_engine.dispose()
 
 
 def test_get_invoice():
-    init_db()
-
-    session = SessionLocal()
+    test_engine, session_factory = create_test_database()
+    session = session_factory()
 
     try:
         invoice = InvoiceDB(
@@ -103,12 +131,12 @@ def test_get_invoice():
 
     finally:
         session.close()
+        test_engine.dispose()
 
 
 def test_get_invoice_by_number():
-    init_db()
-
-    session = SessionLocal()
+    test_engine, session_factory = create_test_database()
+    session = session_factory()
 
     try:
         invoice = InvoiceDB(
@@ -134,12 +162,12 @@ def test_get_invoice_by_number():
 
     finally:
         session.close()
+        test_engine.dispose()
 
 
 def test_list_invoices():
-    init_db()
-
-    session = SessionLocal()
+    test_engine, session_factory = create_test_database()
+    session = session_factory()
 
     try:
         invoice_one = InvoiceDB(
@@ -174,12 +202,12 @@ def test_list_invoices():
 
     finally:
         session.close()
+        test_engine.dispose()
 
 
 def test_delete_invoice():
-    init_db()
-
-    session = SessionLocal()
+    test_engine, session_factory = create_test_database()
+    session = session_factory()
 
     try:
         invoice = InvoiceDB(
@@ -204,12 +232,12 @@ def test_delete_invoice():
 
     finally:
         session.close()
+        test_engine.dispose()
 
 
 def test_delete_nonexistent_invoice():
-    init_db()
-
-    session = SessionLocal()
+    test_engine, session_factory = create_test_database()
+    session = session_factory()
 
     try:
         deleted = delete_invoice(session, 999999)
@@ -218,3 +246,125 @@ def test_delete_nonexistent_invoice():
 
     finally:
         session.close()
+        test_engine.dispose()
+
+
+def test_list_invoices_by_vendor():
+    test_engine, session_factory = create_test_database()
+    session = session_factory()
+
+    try:
+        invoice_one = InvoiceDB(
+            invoice_number="VENDOR-001",
+            vendor="ACME Corp",
+            invoice_date=date(2026, 9, 21),
+            currency="INR",
+            subtotal=Decimal("100.00"),
+            tax=Decimal("18.00"),
+            total=Decimal("118.00"),
+        )
+
+        invoice_two = InvoiceDB(
+            invoice_number="VENDOR-002",
+            vendor="Other Corp",
+            invoice_date=date(2026, 9, 21),
+            currency="INR",
+            subtotal=Decimal("200.00"),
+            tax=Decimal("36.00"),
+            total=Decimal("236.00"),
+        )
+
+        invoice_three = InvoiceDB(
+            invoice_number="VENDOR-003",
+            vendor="ACME Corp",
+            invoice_date=date(2026, 9, 21),
+            currency="INR",
+            subtotal=Decimal("300.00"),
+            tax=Decimal("54.00"),
+            total=Decimal("354.00"),
+        )
+
+        create_invoice(session, invoice_one)
+        create_invoice(session, invoice_two)
+        create_invoice(session, invoice_three)
+
+        invoices = list_invoices_by_vendor(session, "ACME Corp")
+
+        assert len(invoices) == 2
+        assert invoices[0].invoice_number == "VENDOR-001"
+        assert invoices[1].invoice_number == "VENDOR-003"
+
+    finally:
+        session.close()
+        test_engine.dispose()
+
+
+def test_list_invoices_by_currency():
+    test_engine, session_factory = create_test_database()
+    session = session_factory()
+
+    try:
+        invoice_one = InvoiceDB(
+            invoice_number="CURRENCY-001",
+            vendor="Vendor A",
+            invoice_date=date(2026, 9, 21),
+            currency="INR",
+            subtotal=Decimal("100.00"),
+            tax=Decimal("18.00"),
+            total=Decimal("118.00"),
+        )
+
+        invoice_two = InvoiceDB(
+            invoice_number="CURRENCY-002",
+            vendor="Vendor B",
+            invoice_date=date(2026, 9, 21),
+            currency="USD",
+            subtotal=Decimal("200.00"),
+            tax=Decimal("36.00"),
+            total=Decimal("236.00"),
+        )
+
+        create_invoice(session, invoice_one)
+        create_invoice(session, invoice_two)
+
+        invoices = list_invoices_by_currency(session, "INR")
+
+        assert len(invoices) == 1
+        assert invoices[0].invoice_number == "CURRENCY-001"
+
+    finally:
+        session.close()
+        test_engine.dispose()
+
+
+def test_update_invoice():
+    test_engine, session_factory = create_test_database()
+    session = session_factory()
+
+    try:
+        invoice = InvoiceDB(
+            invoice_number="UPDATE-001",
+            vendor="Original Vendor",
+            invoice_date=date(2026, 9, 21),
+            currency="INR",
+            subtotal=Decimal("100.00"),
+            tax=Decimal("18.00"),
+            total=Decimal("118.00"),
+        )
+
+        created = create_invoice(session, invoice)
+
+        updated = update_invoice(
+            session,
+            created.id,
+            vendor="Updated Vendor",
+            total=Decimal("200.00"),
+        )
+
+        assert updated is not None
+        assert updated.vendor == "Updated Vendor"
+        assert updated.total == Decimal("200.00")
+
+    finally:
+        session.close()
+        test_engine.dispose()
