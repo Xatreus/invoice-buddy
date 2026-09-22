@@ -1,13 +1,12 @@
+import os
 from datetime import date
 from decimal import Decimal
-import os
 
 from dotenv import load_dotenv
 from openai import OpenAI
 from pydantic import BaseModel
 
 from invoice_buddy.models import Invoice, LineItem
-
 
 load_dotenv()
 
