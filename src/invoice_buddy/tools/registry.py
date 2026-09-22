@@ -1,6 +1,3 @@
-from invoice_buddy.tools.anomaly_tools import (
-    detect_anomalies_tool,
-)
 from invoice_buddy.tools.analytics_tools import (
     average_invoice_value_tool,
     invoice_count_tool,
@@ -12,7 +9,9 @@ from invoice_buddy.tools.analytics_tools import (
     total_spend_tool,
     vendor_invoice_history_tool,
 )
-
+from invoice_buddy.tools.anomaly_tools import (
+    detect_anomalies_tool,
+)
 from invoice_buddy.tools.invoice_tools import (
     get_invoice_by_number_tool,
     get_invoice_tool,
@@ -20,7 +19,6 @@ from invoice_buddy.tools.invoice_tools import (
     search_invoices_by_vendor_text_tool,
     search_invoices_tool,
 )
-
 from invoice_buddy.tools.tool_registry import (
     ToolDefinition,
     ToolRegistry,

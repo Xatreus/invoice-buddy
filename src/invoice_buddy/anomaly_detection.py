@@ -39,7 +39,7 @@ def detect_large_invoice(
 def detect_vendor_outlier(
     session: Session,
     invoice: InvoiceDB,
-    multiplier: Decimal = Decimal("2"),
+    multiplier: Decimal = Decimal(2),
 ) -> Anomaly | None:
     vendor_invoices = list_invoices_by_vendor(
         session,
@@ -79,7 +79,7 @@ def detect_vendor_outlier(
 def detect_invoice_anomalies(
     session: Session,
     invoice: InvoiceDB,
-    large_invoice_threshold: Decimal = Decimal("100000"),
+    large_invoice_threshold: Decimal = Decimal(100000),
 ) -> list[Anomaly]:
     anomalies: list[Anomaly] = []
 

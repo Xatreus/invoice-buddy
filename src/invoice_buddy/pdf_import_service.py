@@ -4,9 +4,9 @@ from sqlalchemy.orm import Session
 
 from invoice_buddy.llm_extraction import extract_invoice_with_llm
 from invoice_buddy.mappers import invoice_to_db
+from invoice_buddy.models import Invoice
 from invoice_buddy.pdf_ingestion import extract_text_from_pdf
 from invoice_buddy.repositories import create_invoice
-from invoice_buddy.models import Invoice
 
 
 def import_invoice_from_pdf(

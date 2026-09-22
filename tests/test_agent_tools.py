@@ -1,12 +1,12 @@
 from datetime import date
 from decimal import Decimal
 
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
 from invoice_buddy.agent import execute_tool
 from invoice_buddy.database import Base
 from invoice_buddy.db_models import InvoiceDB
-from invoice_buddy.tools.registry import registry
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
 
 def create_test_session():

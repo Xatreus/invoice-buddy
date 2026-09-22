@@ -1,7 +1,7 @@
-from datetime import date
-from decimal import Decimal
 import json
 import os
+from datetime import date
+from decimal import Decimal
 
 from dotenv import load_dotenv
 from openai import OpenAI

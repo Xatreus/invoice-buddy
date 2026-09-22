@@ -81,13 +81,13 @@ def test_import_invoice_from_pdf(tmp_path, monkeypatch):
             line_items=[
                 LineItem(
                     description="Laptop",
-                    quantity=Decimal("2"),
+                    quantity=Decimal(2),
                     unit_price=Decimal("4000.00"),
                     amount=Decimal("8000.00"),
                 ),
                 LineItem(
                     description="Keyboard",
-                    quantity=Decimal("2"),
+                    quantity=Decimal(2),
                     unit_price=Decimal("1000.00"),
                     amount=Decimal("2000.00"),
                 ),
