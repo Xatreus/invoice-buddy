@@ -9,6 +9,7 @@ from invoice_buddy.tools.analytics_tools import (
     total_spend_tool,
     vendor_invoice_history_tool,
 )
+
 from invoice_buddy.tools.invoice_tools import (
     get_invoice_by_number_tool,
     get_invoice_tool,
@@ -16,6 +17,7 @@ from invoice_buddy.tools.invoice_tools import (
     search_invoices_by_vendor_text_tool,
     search_invoices_tool,
 )
+
 from invoice_buddy.tools.tool_registry import (
     ToolDefinition,
     ToolRegistry,
@@ -194,7 +196,12 @@ registry.register(
 registry.register(
     ToolDefinition(
         name="spend_by_vendor",
-        description="Calculate total spending grouped by vendor.",
+        description=(
+            "Return total spending grouped by every vendor. "
+            "This tool takes no arguments. "
+            "Use this when the user wants a breakdown of spending "
+            "across all vendors."
+        ),
         function=spend_by_vendor_tool,
         parameters={
             "type": "object",
@@ -264,7 +271,12 @@ registry.register(
 registry.register(
     ToolDefinition(
         name="vendor_invoice_history",
-        description="Return the invoice history for a vendor.",
+        description=(
+            "Return the complete invoice history for ONE specific vendor. "
+            "Use this when the user asks about a particular vendor, "
+            "including how much was spent with that vendor or how many "
+            "invoices that vendor has."
+        ),
         function=vendor_invoice_history_tool,
         parameters={
             "type": "object",
