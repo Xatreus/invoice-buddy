@@ -11,6 +11,7 @@ questions = [
     "How much have we spent with Global Tech Solutions?",
     "Show me our spending by vendor.",
     "Do I have any suspicious or unusual invoices?",
+    "Monitor all invoices for potential problems.",
 ]
 
 with SessionLocal() as session:

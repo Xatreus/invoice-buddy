@@ -11,6 +11,7 @@ from invoice_buddy.tools.analytics_tools import (
 )
 from invoice_buddy.tools.anomaly_tools import (
     detect_anomalies_tool,
+    monitor_invoices_tool,
 )
 from invoice_buddy.tools.invoice_tools import (
     get_invoice_by_number_tool,
@@ -303,6 +304,32 @@ registry.register(
             "spending outliers."
         ),
         function=detect_anomalies_tool,
+        parameters={
+            "type": "object",
+            "properties": {
+                "large_invoice_threshold": {
+                    "type": "string",
+                    "description": (
+                        "Optional invoice total threshold. Defaults to 100000.00."
+                    ),
+                },
+            },
+            "required": [],
+        },
+    )
+)
+
+
+registry.register(
+    ToolDefinition(
+        name="monitor_invoices",
+        description=(
+            "Monitor all invoices for potential problems and "
+            "return detected anomalies. Use this when the user "
+            "asks to check, monitor, or review invoices for "
+            "problems."
+        ),
+        function=monitor_invoices_tool,
         parameters={
             "type": "object",
             "properties": {

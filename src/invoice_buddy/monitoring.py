@@ -3,14 +3,13 @@ from decimal import Decimal
 from sqlalchemy.orm import Session
 
 from invoice_buddy.anomaly_detection import detect_invoice_anomalies
-from invoice_buddy.monitoring import monitor_invoices
 from invoice_buddy.repositories import list_invoices
 
 
-def detect_anomalies_tool(
+def monitor_invoices(
     session: Session,
-    large_invoice_threshold: str = "100000.00",
-) -> list[dict]:
+    large_invoice_threshold: Decimal = Decimal("100000.00"),
+) -> dict:
     invoices = list_invoices(session)
 
     anomalies = []
@@ -19,7 +18,7 @@ def detect_anomalies_tool(
         invoice_anomalies = detect_invoice_anomalies(
             session,
             invoice,
-            large_invoice_threshold=Decimal(large_invoice_threshold),
+            large_invoice_threshold=large_invoice_threshold,
         )
 
         for anomaly in invoice_anomalies:
@@ -32,16 +31,8 @@ def detect_anomalies_tool(
                     "message": anomaly.message,
                 }
             )
-    return anomalies
 
-
-def monitor_invoices_tool(
-    session: Session,
-    large_invoice_threshold: str = "100000.00",
-) -> dict:
-    result = monitor_invoices(
-        session,
-        large_invoice_threshold=Decimal(large_invoice_threshold),
-    )
-
-    return result
+    return {
+        "anomaly_count": len(anomalies),
+        "anomalies": anomalies,
+    }
