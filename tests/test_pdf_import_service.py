@@ -56,12 +56,48 @@ def create_invoice_pdf(file_path):
     document.close()
 
 
-def test_import_invoice_from_pdf(tmp_path):
+def test_import_invoice_from_pdf(tmp_path, monkeypatch):
     _, session_factory = create_test_database()
 
     pdf_path = tmp_path / "invoice.pdf"
 
     create_invoice_pdf(pdf_path)
+
+    def fake_extract_invoice_with_llm(text):
+        assert "Invoice Number: PDF-IMPORT-001" in text
+        assert "Vendor: ACME Supplies" in text
+
+        from invoice_buddy.models import Invoice, LineItem
+
+        return Invoice(
+            invoice_number="PDF-IMPORT-001",
+            vendor="ACME Supplies",
+            invoice_date=date(2026, 9, 21),
+            due_date=date(2026, 10, 21),
+            currency="INR",
+            subtotal=Decimal("10000.00"),
+            tax=Decimal("1800.00"),
+            total=Decimal("11800.00"),
+            line_items=[
+                LineItem(
+                    description="Laptop",
+                    quantity=Decimal("2"),
+                    unit_price=Decimal("4000.00"),
+                    amount=Decimal("8000.00"),
+                ),
+                LineItem(
+                    description="Keyboard",
+                    quantity=Decimal("2"),
+                    unit_price=Decimal("1000.00"),
+                    amount=Decimal("2000.00"),
+                ),
+            ],
+        )
+
+    monkeypatch.setattr(
+        "invoice_buddy.pdf_import_service.extract_invoice_with_llm",
+        fake_extract_invoice_with_llm,
+    )
 
     with session_factory() as session:
         invoice = import_invoice_from_pdf(

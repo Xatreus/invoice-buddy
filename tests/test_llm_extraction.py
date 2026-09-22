@@ -40,23 +40,31 @@ def create_sample_llm_invoice() -> LLMInvoice:
 def test_extract_invoice_with_llm(monkeypatch):
     expected_llm_invoice = create_sample_llm_invoice()
 
-    class FakeResponses:
-        def parse(self, **kwargs):
-            assert kwargs["model"] == "gpt-5.6-luna"
-            assert kwargs["text_format"] is LLMInvoice
-            assert len(kwargs["input"]) == 2
+    fake_response = SimpleNamespace(
+        choices=[
+            SimpleNamespace(
+                message=SimpleNamespace(content=expected_llm_invoice.model_dump_json())
+            )
+        ]
+    )
 
-            return SimpleNamespace(output_parsed=expected_llm_invoice)
+    class FakeCompletions:
+        def create(self, **kwargs):
+            assert kwargs["model"] == "openai/gpt-oss-20b"
+            assert kwargs["temperature"] == 0
+            assert kwargs["response_format"] == {"type": "json_object"}
+            assert len(kwargs["messages"]) == 2
+
+            return fake_response
 
     class FakeOpenAI:
-        def __init__(self, api_key):
+        def __init__(self, api_key, base_url):
             assert api_key == "test-api-key"
-            self.responses = FakeResponses()
+            assert base_url == "https://integrate.api.nvidia.com/v1"
 
-    monkeypatch.setenv(
-        "OPENAI_API_KEY",
-        "test-api-key",
-    )
+            self.chat = SimpleNamespace(completions=FakeCompletions())
+
+    monkeypatch.setenv("NVIDIA_API_KEY", "test-api-key")
 
     monkeypatch.setattr(
         "invoice_buddy.llm_extraction.OpenAI",

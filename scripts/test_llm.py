@@ -22,8 +22,11 @@ Amount: 2000.00
 """
 
 
+print("Sending invoice to GPT-OSS-20B...")
+
 invoice = extract_invoice_with_llm(invoice_text)
 
+print()
 print("Invoice extracted successfully!")
 print()
 print(f"Invoice number: {invoice.invoice_number}")

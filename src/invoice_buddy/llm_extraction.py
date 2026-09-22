@@ -1,6 +1,7 @@
-import os
 from datetime import date
 from decimal import Decimal
+import json
+import os
 
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -30,9 +31,7 @@ class LLMInvoice(BaseModel):
     line_items: list[LLMLineItem]
 
 
-def convert_llm_invoice(
-    extracted: LLMInvoice,
-) -> Invoice:
+def convert_llm_invoice(extracted: LLMInvoice) -> Invoice:
     line_items = [
         LineItem(
             description=item.description,
@@ -58,23 +57,35 @@ def convert_llm_invoice(
     )
 
 
-def extract_invoice_with_llm(
-    text: str,
-) -> Invoice:
+def extract_invoice_with_llm(text: str) -> Invoice:
     client = OpenAI(
-        api_key=os.environ["OPENAI_API_KEY"],
+        base_url="https://integrate.api.nvidia.com/v1",
+        api_key=os.environ["NVIDIA_API_KEY"],
     )
 
-    response = client.responses.parse(
-        model="gpt-5.6-luna",
-        input=[
+    response = client.chat.completions.create(
+        model="openai/gpt-oss-20b",
+        messages=[
             {
                 "role": "system",
                 "content": (
-                    "Extract invoice information from the "
-                    "provided text. Return dates as YYYY-MM-DD "
-                    "strings and monetary values and quantities "
-                    "as decimal strings."
+                    "Extract the invoice into the exact JSON structure "
+                    "described below.\n\n"
+                    "Required top-level fields:\n"
+                    "invoice_number, vendor, invoice_date, due_date, "
+                    "currency, subtotal, tax, total, line_items\n\n"
+                    "Each line_items element MUST contain ALL four fields:\n"
+                    "description, quantity, unit_price, amount\n\n"
+                    "Rules:\n"
+                    "- Never omit a required field.\n"
+                    "- Copy values from the invoice text.\n"
+                    "- Do not invent values.\n"
+                    "- Dates must use YYYY-MM-DD.\n"
+                    "- quantity, unit_price, amount, subtotal, tax, "
+                    "and total must be strings containing decimal numbers.\n"
+                    "- due_date may be null if it is missing.\n"
+                    "- line_items must be an array.\n\n"
+                    "Return ONLY valid JSON. No markdown. No explanation."
                 ),
             },
             {
@@ -82,12 +93,16 @@ def extract_invoice_with_llm(
                 "content": text,
             },
         ],
-        text_format=LLMInvoice,
+        response_format={"type": "json_object"},
+        temperature=0,
+        max_tokens=2000,
     )
 
-    extracted = response.output_parsed
+    content = response.choices[0].message.content
 
-    if extracted is None:
-        raise ValueError("LLM did not return a structured invoice.")
+    if not content:
+        raise ValueError("LLM did not return any content.")
+
+    extracted = LLMInvoice.model_validate(json.loads(content))
 
     return convert_llm_invoice(extracted)
