@@ -1,3 +1,6 @@
+from invoice_buddy.tools.anomaly_tools import (
+    detect_anomalies_tool,
+)
 from invoice_buddy.tools.analytics_tools import (
     average_invoice_value_tool,
     invoice_count_tool,
@@ -287,6 +290,32 @@ registry.register(
                 },
             },
             "required": ["vendor"],
+        },
+    )
+)
+
+registry.register(
+    ToolDefinition(
+        name="detect_anomalies",
+        description=(
+            "Scan all invoices for potential anomalies. "
+            "Use this when the user asks about suspicious, "
+            "unusual, or potentially problematic invoices. "
+            "Returns detected large invoices and vendor "
+            "spending outliers."
+        ),
+        function=detect_anomalies_tool,
+        parameters={
+            "type": "object",
+            "properties": {
+                "large_invoice_threshold": {
+                    "type": "string",
+                    "description": (
+                        "Optional invoice total threshold. Defaults to 100000.00."
+                    ),
+                },
+            },
+            "required": [],
         },
     )
 )

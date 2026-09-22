@@ -10,7 +10,7 @@ questions = [
     "What is the total amount we have spent?",
     "How much have we spent with Global Tech Solutions?",
     "Show me our spending by vendor.",
-    "Which vendor have we spent the most with, and how many invoices do we have from that vendor?",
+    "Do I have any suspicious or unusual invoices?",
 ]
 
 with SessionLocal() as session:
