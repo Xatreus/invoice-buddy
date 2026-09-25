@@ -1,3 +1,4 @@
+import os
 from types import SimpleNamespace
 
 from invoice_buddy.agent import run_agent
@@ -6,7 +7,10 @@ from invoice_buddy.agent import run_agent
 def test_agent_returns_direct_answer(monkeypatch):
     class FakeCompletions:
         def create(self, **kwargs):
-            assert kwargs["model"] == "openai/gpt-oss-20b"
+            assert kwargs["model"] == os.getenv(
+                "OPENROUTER_MODEL",
+                "openrouter/free",
+            )
             assert kwargs["tool_choice"] == "auto"
             assert len(kwargs["tools"]) > 0
 
