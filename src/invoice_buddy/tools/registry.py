@@ -25,6 +25,10 @@ from invoice_buddy.tools.tool_registry import (
     ToolRegistry,
 )
 
+from invoice_buddy.tools.anomaly_query_tools import (
+    list_unresolved_anomalies_tool,
+)
+
 registry = ToolRegistry()
 
 
@@ -340,6 +344,23 @@ registry.register(
                     ),
                 },
             },
+            "required": [],
+        },
+    )
+)
+
+
+registry.register(
+    ToolDefinition(
+        name="list_unresolved_anomalies",
+        description=(
+            "List all unresolved invoice anomalies that have "
+            "already been detected and stored."
+        ),
+        function=list_unresolved_anomalies_tool,
+        parameters={
+            "type": "object",
+            "properties": {},
             "required": [],
         },
     )

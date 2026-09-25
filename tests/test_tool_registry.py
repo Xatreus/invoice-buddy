@@ -10,7 +10,7 @@ from invoice_buddy.tools.tool_registry import (
 def test_registry_contains_all_tools():
     tools = registry.list_tools()
 
-    assert len(tools) == 16
+    assert len(tools) == 17
 
 
 def test_registry_get_tool():
@@ -60,7 +60,7 @@ def test_registry_lists_tools():
 def test_registry_returns_llm_schemas():
     schemas = registry.schemas()
 
-    assert len(schemas) == 16
+    assert len(schemas) == 17
 
     total_spend_schema = next(
         schema for schema in schemas if schema["name"] == "total_spend"

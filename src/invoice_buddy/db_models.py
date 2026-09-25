@@ -1,7 +1,7 @@
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 
-from sqlalchemy import Date, ForeignKey, Numeric, String
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from invoice_buddy.database import Base
@@ -87,3 +87,43 @@ class LineItemDB(Base):
     invoice: Mapped[InvoiceDB] = relationship(
         back_populates="line_items",
     )
+
+
+class InvoiceAnomalyDB(Base):
+    __tablename__ = "invoice_anomalies"
+
+    id: Mapped[int] = mapped_column(
+        primary_key=True,
+        autoincrement=True,
+    )
+
+    invoice_id: Mapped[int] = mapped_column(
+        ForeignKey("invoices.id"),
+        index=True,
+    )
+
+    anomaly_type: Mapped[str] = mapped_column(
+        String(100),
+        index=True,
+    )
+
+    severity: Mapped[str] = mapped_column(
+        String(50),
+        default="warning",
+    )
+
+    message: Mapped[str] = mapped_column(
+        String(1000),
+    )
+
+    detected_at: Mapped[datetime] = mapped_column(
+        DateTime,
+    )
+
+    resolved: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        index=True,
+    )
+
+    invoice: Mapped["InvoiceDB"] = relationship()
