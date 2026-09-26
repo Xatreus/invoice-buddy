@@ -1,4 +1,8 @@
-from fastapi import FastAPI, HTTPException
+from pathlib import Path
+import shutil
+import tempfile
+
+from fastapi import FastAPI, File, HTTPException, UploadFile
 from pydantic import BaseModel
 
 from invoice_buddy.agent import run_agent
@@ -15,6 +19,9 @@ app = FastAPI(
 
 
 init_db()
+
+
+MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10 MB
 
 
 class QuestionRequest(BaseModel):
@@ -93,3 +100,100 @@ def get_anomalies():
             }
             for anomaly in anomalies
         ]
+
+
+@app.post("/invoices/upload")
+async def upload_invoice(
+    file: UploadFile = File(...),
+):
+    """
+    Upload a PDF invoice, extract its data using the LLM,
+    validate it, check for duplicates, and save it to the database.
+    """
+
+    if not file.filename:
+        raise HTTPException(
+            status_code=400,
+            detail="A filename is required.",
+        )
+
+    if Path(file.filename).suffix.lower() != ".pdf":
+        raise HTTPException(
+            status_code=400,
+            detail="Only PDF files are supported.",
+        )
+
+    temporary_path = None
+
+    try:
+        with tempfile.NamedTemporaryFile(
+            delete=False,
+            suffix=".pdf",
+        ) as temporary_file:
+            temporary_path = Path(temporary_file.name)
+
+            total_size = 0
+
+            while True:
+                chunk = await file.read(1024 * 1024)
+
+                if not chunk:
+                    break
+
+                total_size += len(chunk)
+
+                if total_size > MAX_UPLOAD_SIZE:
+                    raise HTTPException(
+                        status_code=413,
+                        detail="PDF file is too large. Maximum size is 10 MB.",
+                    )
+
+                temporary_file.write(chunk)
+
+        from invoice_buddy.pdf_import_service import (
+            import_invoice_from_pdf,
+        )
+
+        with SessionLocal() as session:
+            try:
+                invoice = import_invoice_from_pdf(
+                    session,
+                    temporary_path,
+                )
+            except ValueError as exc:
+                raise HTTPException(
+                    status_code=400,
+                    detail=str(exc),
+                ) from exc
+
+            return {
+                "status": "imported",
+                "filename": file.filename,
+                "invoice": {
+                    "invoice_number": invoice.invoice_number,
+                    "vendor": invoice.vendor,
+                    "invoice_date": invoice.invoice_date.isoformat(),
+                    "due_date": (
+                        invoice.due_date.isoformat() if invoice.due_date else None
+                    ),
+                    "currency": invoice.currency,
+                    "subtotal": str(invoice.subtotal),
+                    "tax": str(invoice.tax),
+                    "total": str(invoice.total),
+                    "line_items": [
+                        {
+                            "description": item.description,
+                            "quantity": str(item.quantity),
+                            "unit_price": str(item.unit_price),
+                            "amount": str(item.amount),
+                        }
+                        for item in invoice.line_items
+                    ],
+                },
+            }
+
+    finally:
+        await file.close()
+
+        if temporary_path is not None:
+            temporary_path.unlink(missing_ok=True)

@@ -29,6 +29,11 @@ from invoice_buddy.tools.anomaly_query_tools import (
     list_unresolved_anomalies_tool,
 )
 
+from invoice_buddy.tools.rag_tools import (
+    search_invoice_knowledge,
+)
+
+
 registry = ToolRegistry()
 
 
@@ -362,6 +367,42 @@ registry.register(
             "type": "object",
             "properties": {},
             "required": [],
+        },
+    )
+)
+
+registry.register(
+    ToolDefinition(
+        name="search_invoice_knowledge",
+        description=(
+            "Search the contents of imported invoice documents "
+            "using semantic similarity. Use this when the user asks "
+            "about information, descriptions, services, charges, "
+            "terms, or other details that may appear inside the "
+            "original invoice text."
+        ),
+        function=search_invoice_knowledge,
+        parameters={
+            "type": "object",
+            "properties": {
+                "query": {
+                    "type": "string",
+                    "description": (
+                        "Natural-language question or concept to search "
+                        "for inside invoice documents."
+                    ),
+                },
+                "n_results": {
+                    "type": "integer",
+                    "description": (
+                        "Maximum number of relevant document chunks "
+                        "to return. Defaults to 5."
+                    ),
+                    "minimum": 1,
+                    "maximum": 10,
+                },
+            },
+            "required": ["query"],
         },
     )
 )

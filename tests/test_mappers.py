@@ -1,11 +1,31 @@
 from datetime import date
 from decimal import Decimal
 
-from invoice_buddy.database import SessionLocal, init_db
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+from invoice_buddy.database import init_db
 from invoice_buddy.db_models import InvoiceDB
 from invoice_buddy.mappers import invoice_from_db, invoice_to_db
 from invoice_buddy.models import Invoice, LineItem
 from invoice_buddy.repositories import create_invoice
+
+
+def create_test_database():
+    test_engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+    )
+
+    test_session_factory = sessionmaker(
+        bind=test_engine,
+        autoflush=False,
+        autocommit=False,
+    )
+
+    init_db(test_engine)
+
+    return test_engine, test_session_factory
 
 
 def test_invoice_to_db():
@@ -57,36 +77,35 @@ def test_invoice_from_db():
 
 
 def test_invoice_database_round_trip():
-    init_db()
-
-    original = Invoice(
-        invoice_number="ROUND-001",
-        vendor="Round Trip Vendor",
-        invoice_date=date(2026, 9, 21),
-        due_date=date(2026, 10, 21),
-        currency="INR",
-        subtotal=Decimal("1500.00"),
-        tax=Decimal("270.00"),
-        total=Decimal("1770.00"),
-        line_items=[
-            LineItem(
-                description="Keyboard",
-                quantity=Decimal(2),
-                unit_price=Decimal("500.00"),
-                amount=Decimal("1000.00"),
-            ),
-            LineItem(
-                description="Mouse",
-                quantity=Decimal(1),
-                unit_price=Decimal("500.00"),
-                amount=Decimal("500.00"),
-            ),
-        ],
-    )
-
-    session = SessionLocal()
+    test_engine, session_factory = create_test_database()
+    session = session_factory()
 
     try:
+        original = Invoice(
+            invoice_number="ROUND-001",
+            vendor="Round Trip Vendor",
+            invoice_date=date(2026, 9, 21),
+            due_date=date(2026, 10, 21),
+            currency="INR",
+            subtotal=Decimal("1500.00"),
+            tax=Decimal("270.00"),
+            total=Decimal("1770.00"),
+            line_items=[
+                LineItem(
+                    description="Keyboard",
+                    quantity=Decimal(2),
+                    unit_price=Decimal("500.00"),
+                    amount=Decimal("1000.00"),
+                ),
+                LineItem(
+                    description="Mouse",
+                    quantity=Decimal(1),
+                    unit_price=Decimal("500.00"),
+                    amount=Decimal("500.00"),
+                ),
+            ],
+        )
+
         db_invoice = invoice_to_db(original)
         created = create_invoice(session, db_invoice)
 
@@ -107,3 +126,4 @@ def test_invoice_database_round_trip():
 
     finally:
         session.close()
+        test_engine.dispose()
