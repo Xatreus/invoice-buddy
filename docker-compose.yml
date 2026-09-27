@@ -1,0 +1,16 @@
+services:
+  invoice-buddy:
+    build: .
+    container_name: invoice-buddy
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: sqlite:////app/data/invoice_buddy.db
+    volumes:
+      - invoice_data:/app/data
+    restart: unless-stopped
+
+volumes:
+  invoice_data:

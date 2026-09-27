@@ -2,9 +2,17 @@ from datetime import date
 from decimal import Decimal
 from types import SimpleNamespace
 
+import invoice_buddy.security as security
 from fastapi.testclient import TestClient
 
 from invoice_buddy.api import app
+
+
+TEST_API_KEY = "test-api-key"
+
+AUTH_HEADERS = {
+    "X-API-Key": TEST_API_KEY,
+}
 
 
 client = TestClient(app)
@@ -20,7 +28,13 @@ def test_health():
     }
 
 
-def test_upload_rejects_non_pdf():
+def test_upload_rejects_non_pdf(monkeypatch):
+    monkeypatch.setattr(
+        security,
+        "API_KEY",
+        TEST_API_KEY,
+    )
+
     response = client.post(
         "/invoices/upload",
         files={
@@ -30,19 +44,35 @@ def test_upload_rejects_non_pdf():
                 "text/plain",
             )
         },
+        headers=AUTH_HEADERS,
     )
 
     assert response.status_code == 400
     assert response.json()["detail"] == ("Only PDF files are supported.")
 
 
-def test_upload_requires_file():
-    response = client.post("/invoices/upload")
+def test_upload_requires_file(monkeypatch):
+    monkeypatch.setattr(
+        security,
+        "API_KEY",
+        TEST_API_KEY,
+    )
+
+    response = client.post(
+        "/invoices/upload",
+        headers=AUTH_HEADERS,
+    )
 
     assert response.status_code == 422
 
 
 def test_upload_imports_invoice(monkeypatch):
+    monkeypatch.setattr(
+        security,
+        "API_KEY",
+        TEST_API_KEY,
+    )
+
     fake_invoice = SimpleNamespace(
         invoice_number="INV-TEST-001",
         vendor="Test Vendor",
@@ -77,11 +107,12 @@ def test_upload_imports_invoice(monkeypatch):
         "/invoices/upload",
         files={
             "file": (
-                "test_invoice.pdf",
+                "invoice.pdf",
                 b"fake pdf content",
                 "application/pdf",
-            )
+            ),
         },
+        headers=AUTH_HEADERS,
     )
 
     assert response.status_code == 200
@@ -89,7 +120,7 @@ def test_upload_imports_invoice(monkeypatch):
     data = response.json()
 
     assert data["status"] == "imported"
-    assert data["filename"] == "test_invoice.pdf"
+    assert data["filename"] == "invoice.pdf"
 
     invoice = data["invoice"]
 
@@ -104,6 +135,12 @@ def test_upload_imports_invoice(monkeypatch):
 
 
 def test_upload_handles_duplicate_invoice(monkeypatch):
+    monkeypatch.setattr(
+        security,
+        "API_KEY",
+        TEST_API_KEY,
+    )
+
     def fake_import(session, file_path):
         raise ValueError("Invoice INV-001 already exists.")
 
@@ -119,8 +156,9 @@ def test_upload_handles_duplicate_invoice(monkeypatch):
                 "duplicate.pdf",
                 b"fake pdf content",
                 "application/pdf",
-            )
+            ),
         },
+        headers=AUTH_HEADERS,
     )
 
     assert response.status_code == 400
