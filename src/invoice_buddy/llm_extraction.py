@@ -58,13 +58,20 @@ def convert_llm_invoice(extracted: LLMInvoice) -> Invoice:
 
 
 def extract_invoice_with_llm(text: str) -> Invoice:
+    api_key = os.environ["OPENROUTER_API_KEY"]
+
     client = OpenAI(
-        base_url="https://integrate.api.nvidia.com/v1",
-        api_key=os.environ["NVIDIA_API_KEY"],
+        base_url="https://openrouter.ai/api/v1",
+        api_key=api_key,
+    )
+
+    model = os.getenv(
+        "OPENROUTER_MODEL",
+        "openrouter/free",
     )
 
     response = client.chat.completions.create(
-        model="openai/gpt-oss-20b",
+        model=model,
         messages=[
             {
                 "role": "system",

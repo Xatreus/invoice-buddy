@@ -41,7 +41,14 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
 
         response.headers["Content-Security-Policy"] = (
-            "default-src 'none'; frame-ancestors 'none'"
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            "img-src 'self' data: https://fastapi.tiangolo.com; "
+            "connect-src 'self'; "
+            "font-src 'self' https://cdn.jsdelivr.net; "
+            "object-src 'none'; "
+            "frame-ancestors 'none';"
         )
 
         return response
@@ -287,20 +294,3 @@ async def upload_invoice(
 
         if temporary_path is not None:
             temporary_path.unlink(missing_ok=True)
-
-
-def authenticate(
-    x_api_key: str | None = Header(default=None),
-):
-    try:
-        require_api_key(x_api_key)
-    except RuntimeError as exc:
-        raise HTTPException(
-            status_code=500,
-            detail="API authentication is not configured.",
-        ) from exc
-    except PermissionError as exc:
-        raise HTTPException(
-            status_code=401,
-            detail=str(exc),
-        ) from exc

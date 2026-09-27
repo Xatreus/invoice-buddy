@@ -21,6 +21,13 @@ class InvoiceDB(Base):
         index=True,
     )
 
+    document_hash: Mapped[str | None] = mapped_column(
+        String(64),
+        unique=True,
+        index=True,
+        nullable=True,
+    )
+
     vendor: Mapped[str] = mapped_column(
         String(255),
         index=True,
@@ -49,7 +56,7 @@ class InvoiceDB(Base):
         Numeric(12, 2),
     )
 
-    line_items: Mapped[list[LineItemDB]] = relationship(
+    line_items: Mapped[list["LineItemDB"]] = relationship(
         back_populates="invoice",
         cascade="all, delete-orphan",
     )
@@ -84,7 +91,7 @@ class LineItemDB(Base):
         Numeric(12, 2),
     )
 
-    invoice: Mapped[InvoiceDB] = relationship(
+    invoice: Mapped["InvoiceDB"] = relationship(
         back_populates="line_items",
     )
 

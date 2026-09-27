@@ -31,6 +31,15 @@ def get_invoice_by_number(
     return session.scalar(statement)
 
 
+def get_invoice_by_document_hash(
+    session: Session,
+    document_hash: str,
+) -> InvoiceDB | None:
+    statement = select(InvoiceDB).where(InvoiceDB.document_hash == document_hash)
+
+    return session.scalar(statement)
+
+
 def list_invoices(
     session: Session,
 ) -> list[InvoiceDB]:
