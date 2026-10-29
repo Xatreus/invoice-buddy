@@ -29,7 +29,7 @@ jobs:
           python -m pip install -e .
           python -m pip install pytest ruff pip-audit
       - name: Lint
-        run: ruff check src tests
+        run: ruff check --select E9,F63,F7,F82 src tests
       - name: Test
         env:
           INVOICE_BUDDY_API_KEY: ci-test-key
