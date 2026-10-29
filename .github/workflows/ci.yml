@@ -36,5 +36,15 @@ jobs:
           LLM_PROVIDER: openrouter
           OPENROUTER_API_KEY: ci-placeholder-key
         run: pytest -q
+      # The current ChromaDB release is reported affected by these advisories,
+      # and the advisory database reports no fixed release. These exceptions are
+      # explicit and must be removed once a patched release is available.
+      # Invoice Buddy uses ChromaDB as a local embedded vector store; do not
+      # expose a ChromaDB server endpoint to untrusted networks.
       - name: Audit installed dependencies
-        run: pip-audit
+        run: >-
+          pip-audit --skip-editable
+          --ignore-vuln PYSEC-2026-311
+          --ignore-vuln PYSEC-2026-3813
+          --ignore-vuln PYSEC-2026-3814
+          --ignore-vuln PYSEC-2026-3815
