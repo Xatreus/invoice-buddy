@@ -134,13 +134,13 @@ The API is available at [http://127.0.0.1:8000](http://127.0.0.1:8000). Invoice 
 | Method | Endpoint | Purpose | API key |
 |---|---|---|---|
 | GET | `/health` | Health check | No |
-| GET | `/invoices` | List stored invoices | No |
+| GET | `/invoices` | List stored invoices (paginated) | Yes |
 | POST | `/invoices/upload` | Upload and import a PDF invoice | Yes |
 | POST | `/ask` | Ask a natural-language invoice question | Yes |
 | POST | `/monitor` | Run invoice monitoring | Yes |
 | GET | `/anomalies` | List unresolved anomalies | Yes |
 
-Protected endpoints expect the `X-API-Key` request header.
+All invoice-data endpoints expect the `X-API-Key` request header. `GET /invoices` accepts `limit` (default 50, maximum 100) and `offset` (default 0), and returns an object containing `items`, `limit`, `offset`, and `count`. Example: `/invoices?limit=25&offset=0`.
 
 ### Example: ask a question
 
@@ -185,13 +185,13 @@ The repository contains tests for API behavior, PDF ingestion and extraction, in
 
 - Never commit `.env`, API keys, real invoices, or customer financial data.
 - The API-key mechanism is a simple shared-secret control, not a complete identity and access-management system.
-- The current `/invoices` endpoint does not require an API key; review this before exposing the service beyond a trusted local environment.
+- The `/invoices` endpoint requires the shared API key and supports bounded pagination in the portfolio-readiness branch.
 - Review CORS, logging, rate limiting, file-content validation, access control, and data-retention behavior before any public deployment.
 - Treat uploaded invoice text as untrusted input. The agent prompt instructs the model not to follow instructions found in retrieved documents, but prompt instructions alone are not a complete prompt-injection defense.
 
 ## Roadmap
 
-- Add CI to run the test suite automatically.
+- Add broader CI coverage for security, mixed-currency analytics, pagination, and invalid PDF cases.
 - Add an API authentication test matrix and deployment-safe configuration checks.
 - Add reproducible RAG evaluation results and a sample end-to-end demo.
 - Add screenshots or a short demo recording once the user flow is stable.
