@@ -2,6 +2,7 @@ from datetime import date
 from decimal import Decimal
 from types import SimpleNamespace
 
+import fitz
 import invoice_buddy.security as security
 from fastapi.testclient import TestClient
 
@@ -16,6 +17,13 @@ AUTH_HEADERS = {
 
 
 client = TestClient(app)
+
+
+def _valid_pdf_bytes() -> bytes:
+    """Create a tiny valid PDF so upload tests exercise the import path."""
+    with fitz.open() as document:
+        document.new_page()
+        return document.tobytes()
 
 
 def test_health():
@@ -49,6 +57,25 @@ def test_upload_rejects_non_pdf(monkeypatch):
 
     assert response.status_code == 400
     assert response.json()["detail"] == ("Only PDF files are supported.")
+
+
+def test_upload_rejects_invalid_pdf_content(monkeypatch):
+    monkeypatch.setattr(security, "API_KEY", TEST_API_KEY)
+
+    response = client.post(
+        "/invoices/upload",
+        files={
+            "file": (
+                "invoice.pdf",
+                b"not really a pdf",
+                "application/pdf",
+            )
+        },
+        headers=AUTH_HEADERS,
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Uploaded content is not a PDF."
 
 
 def test_upload_requires_file(monkeypatch):
@@ -96,6 +123,9 @@ def test_upload_imports_invoice(monkeypatch):
         assert file_path.exists()
         assert file_path.suffix == ".pdf"
 
+        with fitz.open(file_path) as document:
+            assert document.page_count == 1
+
         return fake_invoice
 
     monkeypatch.setattr(
@@ -108,7 +138,7 @@ def test_upload_imports_invoice(monkeypatch):
         files={
             "file": (
                 "invoice.pdf",
-                b"fake pdf content",
+                _valid_pdf_bytes(),
                 "application/pdf",
             ),
         },
@@ -154,7 +184,7 @@ def test_upload_handles_duplicate_invoice(monkeypatch):
         files={
             "file": (
                 "duplicate.pdf",
-                b"fake pdf content",
+                _valid_pdf_bytes(),
                 "application/pdf",
             ),
         },
