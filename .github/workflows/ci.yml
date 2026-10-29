@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "fix/**", "feature/**"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - name: Install project and test tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+          python -m pip install pytest ruff pip-audit
+      - name: Lint
+        run: ruff check src tests
+      - name: Test
+        env:
+          INVOICE_BUDDY_API_KEY: ci-test-key
+          LLM_PROVIDER: openrouter
+          OPENROUTER_API_KEY: ci-placeholder-key
+        run: pytest -q
+      - name: Audit installed dependencies
+        run: pip-audit
