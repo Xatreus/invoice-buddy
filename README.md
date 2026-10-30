@@ -189,12 +189,6 @@ The repository contains tests for API behavior, PDF ingestion and extraction, in
 - Review CORS, logging, rate limiting, file-content validation, access control, and data-retention behavior before any public deployment.
 - Treat uploaded invoice text as untrusted input. The agent prompt instructs the model not to follow instructions found in retrieved documents, but prompt instructions alone are not a complete prompt-injection defense.
 
-## Roadmap
-
-- Add broader CI coverage for security, mixed-currency analytics, pagination, and invalid PDF cases.
-- Add an API authentication test matrix and deployment-safe configuration checks.
-- Add reproducible RAG evaluation results and a sample end-to-end demo.
-- Add screenshots or a short demo recording once the user flow is stable.
 
 ## License
 
